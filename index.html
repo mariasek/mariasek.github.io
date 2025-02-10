@@ -6,23 +6,15 @@
 
 <script type="text/javascript">  
     document.addEventListener('DOMContentLoaded', function() {
-        //document.getElementById('test').textContent = localStorage.getItem('test-key');
-
-        //get the date and time
-        var currentDate = (new Date()).getTime();  
-        
-        //create new script element
-        var newScriptElement = document.createElement("script");  
-        newScriptElement.type = "text/javascript";  
-        
-        // add current date to URL as a query parameter
-        newScriptElement.src = "javascript.js?" + currentDate;  
-        
-        // append new script element to body.
-        document.body.appendChild(newScriptElement);  
+        // Prevent caching javascript file
+        var currentDate = (new Date()).getTime();
+        var newScriptElement = document.createElement("script");
+        newScriptElement.type = "text/javascript";
+        newScriptElement.src = "javascript.js?" + currentDate;
+        document.body.appendChild(newScriptElement);
     }, false);
- </script>
-<!-- <script type="text/javascript" src="javascript.js"></script> -->
+</script>
+
 <h1>Mariáš bude!</h1>
 <button onclick="downloadIndex()">Stáhnout index</button>
 <p>update!</p>
