@@ -4,20 +4,32 @@
 <meta http-equiv="expires" content="Tue, 01 Jan 1980 1:00:00 GMT" />
 <meta http-equiv="pragma" content="no-cache" />
 
-<script type="text/javascript">  
-    document.addEventListener('DOMContentLoaded', function() {
-        // Prevent caching javascript file
-        var currentDate = (new Date()).getTime();
-        var newScriptElement = document.createElement("script");
-        newScriptElement.type = "text/javascript";
-        newScriptElement.src = "javascript.js?" + currentDate;
-        document.body.appendChild(newScriptElement);
-    }, false);
-</script>
+<html>
+    <!-- <link rel="stylesheet" type="text/css" href="style.css?494"> -->
+    <script type="text/javascript">  
+        document.addEventListener('DOMContentLoaded', function() {
+            // Prevent caching javascript file
+            var currentDate = (new Date()).getTime();
+            var newScriptElement = document.createElement("script");
+            newScriptElement.type = "text/javascript";
+            newScriptElement.src = "javascript.js?" + currentDate;
+            document.body.appendChild(newScriptElement);
 
-<h1>Mariáš bude!</h1>
-<button onclick="downloadIndex()">Stáhnout index</button>
-<p>update!</p>
-<p>update2</p>
-<p>update3</p>
-<p>update4</p>
+            var newCssElement = document.createElement("link");
+            newCssElement.rel = "stylesheet";
+            newCssElement.type = "text/css";
+            newCssElement.href = "style.css?" + currentDate;
+            document.body.appendChild(newCssElement);
+            // <link rel="stylesheet" type="text/css" href="http://mysite/style.css?id=1234">
+        }, false);
+    </script>
+
+    <body>
+        <h1>Mariáš bude!</h1>
+        <button onclick="downloadIndex()">Stáhnout index</button>
+        <p>update!</p>
+        <p>update2</p>
+        <p>update3</p>
+        <p>update4</p>
+    </body>
+</html>
