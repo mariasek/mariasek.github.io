@@ -1,6 +1,6 @@
 
 document.addEventListener('DOMContentLoaded', function() {
-    //document.getElementById('test').textContent = localStorage.getItem('test-key');
+    document.getElementById('h1').textContent = '2';
 }, false);
 
 function downloadIndex() {
