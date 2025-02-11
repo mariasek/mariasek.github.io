@@ -16,7 +16,10 @@ class Result {
     constructor() {
         this.ownValue = 0;
         this.enemyValue = 0;
-        this.comment = '';
+        /**
+         * @type {string}
+         */
+        this.comment = null;
         this.accepted = false;
         this.basePart = new Part();
         this.linkPart = new Part();
@@ -491,7 +494,55 @@ class SimpleEvaluator {
     }
 }
 
+class TestRecord {
+    play = '';
+    expected = {
+        accepted: false,
+        comment: '',
+        ownValue: 0,
+        enemyValue: 0,
+    };
+    result = new Result();
+}
+
+class Tests {
+    /**
+     * @type {TestRecord[]}
+     */
+    records = [
+        { play: 'e', expected: { accepted: true, comment: null, ownValue: -120, enemyValue: 60 } },
+        // TODO:
+    ]
+
+    runTests() {
+        const errors = [];
+
+        for (const record of this.records) {
+            const evaluator = new SimpleEvaluator();
+            const result = evaluator.evaluate(record.play);
+            const exp = record.expected;
+            if (result.accepted !== exp.accepted || result.comment !== exp.comment || result.ownValue !== exp.ownValue || result.enemyValue !== exp.enemyValue) {
+                record.result = result;
+                errors.push(record);
+            }
+        }
+
+        if (errors.length === 0) {
+            return;
+        }
+
+        const strError = '[' + errors.map(function(r) {
+            return 'specifikace: ' + r.play + ', očekávané: ' + JSON.stringify(r.expected) + ', výsledek: ' + JSON.stringify(r.result);
+        }).join(' ') + ']';
+
+        document.getElementById('error').textContent = 'Chyba testu: ' + strError;
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
+    const tests = new Tests();
+    tests.runTests();
+
     // let parser = new SimpleParser();
     // const result = parser.parse('$:+k130-3s');
     const opt = new IndexOption();
