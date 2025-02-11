@@ -2,8 +2,81 @@ body {
     font-family: Arial, Helvetica, sans-serif;
     background-color: rgb(13, 17, 23);
     color: rgb(240, 246, 252);
+    max-width: 40em;
+    margin-left: auto;
+	margin-right: auto;
+    padding: 0px 8px 10px 8px;
+	font-size: 16pt;
+}
+
+body {
+	border: 1px solid rgb(190, 190, 190);
+	padding: 0px 8px 10px 8px;
+	/*margin: 8px 0px 0px 0px;*/
 }
 
 #error {
     color: red;
+}
+
+/* Desktop */
+@media only screen and (min-width: 1224px) {
+	/* Chess diagram */
+	.diagram {
+		float: left;
+		margin-right: 1em;
+	}
+	/* Chessboard field */
+	.diagram img {
+		margin-bottom: -3px;
+	}
+	/* body {
+		padding: 0px 0px 10px 0px;
+	} */
+}
+
+/* Smartphones landscape and portrait */
+@media only screen and (min-device-width: 320px) and (max-device-width: 480px) {
+	/* Chess diagram */
+	.diagram {
+		float: left;
+		margin-right: 1em;
+	}
+	/* Chessboard field */
+	.diagram img {
+		margin-bottom: -5px;
+	}
+	.body {
+		padding: 0px 8px 10px 8px;
+		margin: 10px 0px 0px 0px;
+	}
+	body#index {
+		padding: 0px;
+	}
+	
+	/*html, p, span, table, pre, li, h1 {
+		font-size: 80%;
+	}
+	
+	h2 {
+		font-size: 120%;
+	}
+	
+	h3 {
+		font-size: 100%;
+	}*/
+	
+	pre.index {
+		/*font-size: 80%;*/
+		line-height: 150%;
+	}
+	
+	.comment, .description {
+		font-style: normal;
+	}
+	
+	.date, .dateplace {
+		/*font-size: 66%;*/
+		font-style: normal;
+	}
 }
