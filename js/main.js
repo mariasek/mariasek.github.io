@@ -819,25 +819,26 @@ document.addEventListener('DOMContentLoaded', function() {
     const tests = new Tests()
     tests.runTests()
 
-    // let parser = new SimpleParser()
-    // const result = parser.parse('$:+k130-3s')
-    const opt = new IndexOption()
-    opt.hundredType = Hundred.ADD
-    const evaluator = new SimpleEvaluator(3, opt)
-    const result = evaluator.evaluate('+k130-3s*')
+    // if (!result.accepted) {
+    //     document.getElementById('error').textContent = 'Chyba: ' + result.errorMessage
+    // } else {
+    //     document.getElementById('ownValue').textContent = 'Vlastní hodnota: ' + result.ownValue.toString()
+    //     document.getElementById('enemyValue').textContent = 'Cizí hodnota: ' + result.enemyValue.toString()
+    // }
 
-    if (!result.accepted) {
-        document.getElementById('error').textContent = 'Chyba: ' + result.errorMessage
+    //onChangeEvaluatePlay()
+    
+    if (localStorage.getItem('evaluatePlay') === undefined) {
+        clearEvaluatePlay()
     } else {
-        document.getElementById('ownValue').textContent = 'Vlastní hodnota: ' + result.ownValue.toString()
-        document.getElementById('enemyValue').textContent = 'Cizí hodnota: ' + result.enemyValue.toString()
+        loadEvaluatePlay()
     }
 
+    onChangeEvaluatePlay()
 
 }, false)
 
 function downloadIndex() {
-    //const data = 'Hello, world!'
     const data = localStorage.getItem('test-key')
     const blob = new Blob([data], { type: 'text/plain' })
     const fileURL = URL.createObjectURL(blob)
@@ -846,4 +847,60 @@ function downloadIndex() {
     downloadLink.download = 'example.txt'
     document.body.appendChild(downloadLink)
     downloadLink.click()
+}
+
+/** @param {number} */
+function toCurrency(value) {
+    return ((value / 100).toFixed(2)).replaceAll('.', ',') + ' Kč'
+}
+
+class EvaluatePlay {
+    groupSize = 3
+    play = ''
+    hundredType = Hundred.ADD
+    multiplier = 1
+}
+
+function onChangeEvaluatePlay() {
+    const ep = new EvaluatePlay()
+
+    ep.groupSize = parseInt(document.getElementById('group-size').value)
+    ep.play = document.getElementById('evaluate-play').value
+    ep.hundredType = document.getElementById('hundred-type').value
+    ep.multiplier = parseInt(document.getElementById('multiplier').value)
+
+    localStorage.setItem('evaluatePlay', JSON.stringify(ep))
+
+    const indexOption = new IndexOption()
+    indexOption.hundredType = (ep.hundredType === 'ADD' ? Hundred.ADD : Hundred.MULTI)
+    indexOption.multiplier = ep.multiplier
+
+    const evaluator = new SimpleEvaluator(ep.groupSize, indexOption)
+    const result = evaluator.evaluate(ep.play)
+
+    if (ep.play.length > 0 && !result.accepted) {
+        document.getElementById('error').textContent = 'Chyba: ' + result.errorMessage
+        document.getElementById('ownValue').textContent = ''
+        document.getElementById('enemyValue').textContent = ''
+    } else {
+        document.getElementById('error').textContent = ''
+        document.getElementById('ownValue').textContent = toCurrency(result.ownValue)
+        document.getElementById('enemyValue').textContent = toCurrency(result.enemyValue)
+    }
+}
+
+function clearEvaluatePlay() {
+    const ep = new EvaluatePlay()
+    localStorage.setItem('evaluatePlay', JSON.stringify(ep))
+    loadEvaluatePlay()
+    onChangeEvaluatePlay()
+}
+
+function loadEvaluatePlay() {
+    const ep = new EvaluatePlay()
+    Object.assign(ep, JSON.parse(localStorage.getItem('evaluatePlay')))
+    document.getElementById('group-size').value = ep.groupSize
+    document.getElementById('evaluate-play').value = ep.play
+    document.getElementById('hundred-type').value = (ep.hundredType === Hundred.ADD ? 'ADD' : 'MULTI')
+    document.getElementById('multiplier').value = ep.multiplier
 }

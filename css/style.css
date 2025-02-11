@@ -80,3 +80,7 @@ body {
 		font-style: normal;
 	}
 }
+
+input, select, button {
+    font-size: 16pt;
+}
