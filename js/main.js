@@ -901,6 +901,6 @@ function loadEvaluatePlay() {
     Object.assign(ep, JSON.parse(localStorage.getItem('evaluatePlay')))
     document.getElementById('group-size').value = ep.groupSize
     document.getElementById('evaluate-play').value = ep.play
-    document.getElementById('hundred-type').value = (ep.hundredType === Hundred.ADD ? 'ADD' : 'MULTI')
+    document.getElementById('hundred-type').value = ep.hundredType
     document.getElementById('multiplier').value = ep.multiplier
 }
