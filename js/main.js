@@ -857,7 +857,7 @@ function toCurrency(value) {
 class EvaluatePlay {
     groupSize = 3
     play = ''
-    hundredType = Hundred.ADD
+    hundredType = 'ADD'
     multiplier = 1
 }
 
