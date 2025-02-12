@@ -1,7 +1,7 @@
 "use strict"
 
 import { Hundred, IndexOption } from './types.js'
-import { SimpleEvaluator } from './main.mjs'
+import { SimpleEvaluator } from './main.js'
 
 export class Tests {
     /**

@@ -75,8 +75,7 @@ export class Group {
 export class Index {
     /** @type {Group[]} */
     groups = []
-    /** @type {Date} */
-    date
+    date = new Date()
     place = ''
     opt = new IndexOption()
 }

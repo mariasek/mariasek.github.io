@@ -3,6 +3,7 @@
    "version": "1.0.0", 
    "description": "Mariasek project.", 
    "scripts": { 
+     "dev": "lite-server",
      "lite": "lite-server --port 8080", 
      "start": "npm run lite" 
    }, 

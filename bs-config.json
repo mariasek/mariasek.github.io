@@ -1,0 +1,5 @@
+{
+    "port": 8080,
+    "files": ["./js/*.{html,htm,css,js,mjs}"],
+    "server": { "baseDir": "." }
+}

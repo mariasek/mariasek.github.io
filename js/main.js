@@ -1,7 +1,23 @@
 "use strict"
 
 import { Tests } from './evaluator-tests.js'
-import { BaseValues, IndexOption, Result, Hundred, ParityPayment } from './types.js'
+import { BaseValues, IndexOption, Result, Hundred, ParityPayment, Index } from './types.js'
+
+document.addEventListener('DOMContentLoaded', function() {
+    const tests = new Tests()
+    tests.runTests()
+
+    setupElements()
+
+    if (localStorage.getItem('evaluatePlay') === undefined) {
+        clearEvaluatePlay()
+    } else {
+        loadEvaluatePlay()
+    }
+
+    onChangeEvaluatePlay()
+
+}, false)
 
 class SimpleParser {
     /**
@@ -442,23 +458,8 @@ function setupElements() {
     document.getElementById('hundred-type').addEventListener('change', onChangeEvaluatePlay)
     document.getElementById('multiplier').addEventListener('change', onChangeEvaluatePlay)
     document.getElementById('clear-evaluate-play').addEventListener('click', clearEvaluatePlay)
+    document.getElementById('create-new-index').addEventListener('click', createNewIndex)
 }
-
-document.addEventListener('DOMContentLoaded', function() {
-    const tests = new Tests()
-    tests.runTests()
-
-    setupElements()
-
-    if (localStorage.getItem('evaluatePlay') === undefined) {
-        clearEvaluatePlay()
-    } else {
-        loadEvaluatePlay()
-    }
-
-    onChangeEvaluatePlay()
-
-}, false)
 
 function downloadIndex() {
     const data = localStorage.getItem('test-key')
@@ -525,4 +526,10 @@ function loadEvaluatePlay() {
     document.getElementById('evaluate-play').value = ep.play
     document.getElementById('hundred-type').value = ep.hundredType
     document.getElementById('multiplier').value = ep.multiplier
+}
+
+function createNewIndex() {
+    const index = new Index()
+    localStorage.setItem('newIndex', JSON.stringify(index))
+    //console.log('test')
 }
