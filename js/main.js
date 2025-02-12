@@ -459,6 +459,7 @@ function setupElements() {
     document.getElementById('multiplier').addEventListener('change', onChangeEvaluatePlay)
     document.getElementById('clear-evaluate-play').addEventListener('click', clearEvaluatePlay)
     document.getElementById('create-new-index').addEventListener('click', createNewIndex)
+    document.getElementById('new-index-area').addEventListener('input', onChangeNewIndex)
 }
 
 function downloadIndex() {
@@ -510,6 +511,8 @@ function onChangeEvaluatePlay() {
         document.getElementById('ownValue').textContent = toCurrency(result.ownValue)
         document.getElementById('enemyValue').textContent = toCurrency(result.enemyValue) + '/os'
     }
+
+    reloadNewIndex()
 }
 
 function clearEvaluatePlay() {
@@ -528,8 +531,16 @@ function loadEvaluatePlay() {
     document.getElementById('multiplier').value = ep.multiplier
 }
 
+function onChangeNewIndex() {
+    localStorage.setItem('newIndex', document.getElementById('new-index-area').value)
+}
+
 function createNewIndex() {
-    const index = new Index()
-    localStorage.setItem('newIndex', JSON.stringify(index))
-    
+    //const index = new Index()
+    localStorage.setItem('newIndex', '')
+    reloadNewIndex()
+}
+
+function reloadNewIndex() {
+    document.getElementById('new-index-area').value = localStorage.getItem('newIndex')
 }
