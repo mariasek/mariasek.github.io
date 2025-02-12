@@ -52,8 +52,8 @@ export class ParityPayment {
 }
 
 export class Hundred {
-    static get MULTI() { return 'násobené' }
-    static get ADD() { return 'sčítané' }
+    static get MULTI() { return 'MULTI' }
+    static get ADD() { return 'ADD' }
 }
 
 export class IndexOption {

@@ -85,6 +85,15 @@ input, select, button {
     font-size: 16pt;
 }
 
+textarea {
+    font-size: 12pt;
+}
+
 #evaluate-play {
     max-width: 150px;
+}
+
+#new-index-area {
+    width: 100%;
+    min-height: 160px;
 }

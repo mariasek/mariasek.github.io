@@ -531,5 +531,5 @@ function loadEvaluatePlay() {
 function createNewIndex() {
     const index = new Index()
     localStorage.setItem('newIndex', JSON.stringify(index))
-    //console.log('test')
+    
 }
