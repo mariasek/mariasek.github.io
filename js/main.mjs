@@ -436,19 +436,20 @@ export class SimpleEvaluator {
     }
 }
 
+function setupElements() {
+    document.getElementById('evaluate-play').addEventListener('input', onChangeEvaluatePlay)
+    document.getElementById('group-size').addEventListener('change', onChangeEvaluatePlay)
+    document.getElementById('hundred-type').addEventListener('change', onChangeEvaluatePlay)
+    document.getElementById('multiplier').addEventListener('change', onChangeEvaluatePlay)
+    document.getElementById('clear-evaluate-play').addEventListener('click', clearEvaluatePlay)
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     const tests = new Tests()
     tests.runTests()
 
-    // if (!result.accepted) {
-    //     document.getElementById('error').textContent = 'Chyba: ' + result.errorMessage
-    // } else {
-    //     document.getElementById('ownValue').textContent = 'Vlastní hodnota: ' + result.ownValue.toString()
-    //     document.getElementById('enemyValue').textContent = 'Cizí hodnota: ' + result.enemyValue.toString()
-    // }
+    setupElements()
 
-    //onChangeEvaluatePlay()
-    
     if (localStorage.getItem('evaluatePlay') === undefined) {
         clearEvaluatePlay()
     } else {

@@ -22,8 +22,8 @@
             <div>
                 <label>Vyhodnotit hru:</label>
             </div>
-            <input id="evaluate-play" oninput="onChangeEvaluatePlay()"></input>
-            <select id="group-size" onchange="onChangeEvaluatePlay()">
+            <input id="evaluate-play"/>
+            <select id="group-size">
                 <option value="3">3 hráči</option>
                 <option value="4">4 hráči</option>
                 <option value="5">5 hráčů</option>
@@ -31,16 +31,16 @@
                 <option value="7">7 hráčů</option>
                 <option value="8">8 hráčů</option>
             </select>
-            <select id="hundred-type" onchange="onChangeEvaluatePlay()">
+            <select id="hundred-type">
                 <option value="ADD">Sčítané kilo</option>
                 <option value="MULTI">Násobené kilo</option>
             </select>
-            <select id="multiplier" onchange="onChangeEvaluatePlay()">
+            <select id="multiplier">
                 <option value="1">Desetníkový</option>
                 <option value="2">Dvacetníkový</option>
                 <option value="10">Korunový</option>
             </select>
-            <button onclick="clearEvaluatePlay()">Reset</button>
+            <button id="clear-evaluate-play">Reset</button>
             <div>
                 <span>Já:</span>
                 <span id="ownValue"></span>

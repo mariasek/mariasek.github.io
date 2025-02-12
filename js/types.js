@@ -60,3 +60,23 @@ export class IndexOption {
     hundredType = Hundred.MULTI
     multiplier = 1
 }
+
+export class Player {
+    name = ''
+    /** @type {string[]} */
+    plays = []
+}
+
+export class Group {
+    /** @type {Player[]} */
+    players = []
+}
+
+export class Index {
+    /** @type {Group[]} */
+    groups = []
+    /** @type {Date} */
+    date
+    place = ''
+    opt = new IndexOption()
+}
