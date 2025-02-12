@@ -10,7 +10,7 @@ body {
 }
 
 body {
-	border: 1px solid rgb(190, 190, 190);
+	/* border: 1px solid rgb(190, 190, 190); */
 	padding: 0px 8px 10px 8px;
 	/*margin: 8px 0px 0px 0px;*/
 }
@@ -83,4 +83,8 @@ body {
 
 input, select, button {
     font-size: 16pt;
+}
+
+#evaluate-play {
+    max-width: 150px;
 }

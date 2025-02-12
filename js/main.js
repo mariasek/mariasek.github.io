@@ -885,7 +885,7 @@ function onChangeEvaluatePlay() {
     } else {
         document.getElementById('error').textContent = ''
         document.getElementById('ownValue').textContent = toCurrency(result.ownValue)
-        document.getElementById('enemyValue').textContent = toCurrency(result.enemyValue)
+        document.getElementById('enemyValue').textContent = toCurrency(result.enemyValue) + '/osoba'
     }
 }
 
