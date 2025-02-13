@@ -1,7 +1,7 @@
 "use strict"
 
 import { Tests } from './evaluator-tests.js'
-import { BaseValues, IndexOption, Result, Hundred, ParityPayment, Index } from './types.js'
+import { BaseValues, IndexOption, Result, Hundred, ParityPayment, Index, Player, Group } from './types.js'
 
 document.addEventListener('DOMContentLoaded', function() {
     const tests = new Tests()
@@ -16,6 +16,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     onChangeEvaluatePlay()
+
+    // TODO:
+    const reader = new TextIndexReader()
+    const index = reader.readIndex(document.getElementById('new-index-area').value)
 
 }, false)
 
@@ -449,6 +453,108 @@ export class SimpleEvaluator {
             default:
                 return new Error('nepodporovaný typ kila: ' + this.indexOpt.hundredType)
         }
+    }
+}
+
+class TextIndexReader {
+    /** @param {string} text */
+    readIndex(text) {
+        let place = ''
+        /** @type {Date} */
+        let date
+        let isFirstLine = true
+        let indexOpt = new IndexOption()
+        /** @type {Player[]} */
+        let players = []
+        /** @type {Group[]} */
+        const groups = []
+
+        for (const line of text.split('\n')) {
+            if (isFirstLine) {
+                isFirstLine = false
+                const datePlaceTokens = line.split(' ')
+                date = Date.parse(datePlaceTokens[0])
+                place = datePlaceTokens.slice(1).join(' ')
+
+                const match = place.match(/^([^\{]*) {([^\{]*)}$/)
+                if (match !== null) {
+                    place = match[1]
+                    indexOpt = this.parseIndexOption(match[2])
+                }
+                //new Date(date).toISOString().slice(0, 10)
+                continue
+            }
+
+            if (line.length === 0 && players.length > 0) {
+                groups.push(new Group(players))
+                players = []
+                continue
+            }
+
+            const namePlayTokens = line.split(' ')
+            const playerName = namePlayTokens[0]
+            const playTokens = this.splitPlaysWithComments(namePlayTokens.slice(1).join(' '))
+            players.push(new Player(playerName, playTokens))
+        }
+
+        if (players.length > 0) {
+            groups.push(new Group(players))
+        }
+
+        /** @type {Index} */
+        return {
+            date: date,
+            place: place,
+            groups: groups,
+            opt: indexOpt,
+        }
+    }
+
+    /** @param {string} text  */
+    splitPlaysWithComments(text) {
+        /** @type {string[]} */
+        const result = []
+        /** @type {string[]} */
+        let builder = []
+        let inComment = false
+
+        for (const c of text) {
+            if (c === '{') {
+                inComment = true
+            } else if (c === '}') {
+                inComment = false
+            } else if (c === ' ' && !inComment) {
+                result.push(builder.join())
+                builder = []
+                continue
+            }
+
+            builder.push(c)
+        }
+
+        if (builder.length > 0) {
+            result.push(builder.join())
+        }
+        return result
+    }
+
+    /** @param {string} text */
+    parseIndexOption(text) {
+        const indexOpt = new IndexOption()
+        for (const token of text.split(' ')) {
+            if (token === 'hundred=add' || token === 'sčítané-kilo') {
+                indexOpt.hundredType = Hundred.ADD
+            } else if (token === 'hundred=mult' || token === 'násobené-kilo') {
+                indexOpt.hundredType = Hundred.MULTI
+            } else if (token === 'multiplier=1' || token === 'desetníkový') {
+                indexOpt.multiplier = 1
+            } else if (token === 'multiplier=2' || token === 'dvacetníkový') {
+                indexOpt.multiplier = 2
+            } else if (token === 'multiplier=10' || token === 'korunový') {
+                indexOpt.multiplier = 10
+            }
+        }
+        return indexOpt
     }
 }
 

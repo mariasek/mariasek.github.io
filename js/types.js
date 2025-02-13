@@ -65,11 +65,26 @@ export class Player {
     name = ''
     /** @type {string[]} */
     plays = []
+
+    /**
+     * 
+     * @param {string} name 
+     * @param {string[]} plays 
+     */
+    constructor(name, plays) {
+        this.name = name
+        this.plays = plays
+    }
 }
 
 export class Group {
     /** @type {Player[]} */
     players = []
+
+    /** @param {Player[]} players */
+    constructor(players) {
+        this.players.push(...players)
+    }
 }
 
 export class Index {
