@@ -502,11 +502,28 @@ class TextIndexReader {
             const namePlayTokens = line.split(' ')
             const playerName = namePlayTokens[0]
             const playTokens = this.splitPlaysWithComments(namePlayTokens.slice(1).join(' '))
+            if (playerName === '') {
+                return [null, new Error('prázdné jméno hráče')]
+            }
             players.push(new Player(playerName, playTokens))
         }
 
         if (players.length > 0) {
             groups.push(new Group(players))
+        }
+
+        for (const group of groups) {
+            if (group.players.length < 3) {
+                return [null, new Error('nedostatečný počet hráčů ve skupině')]
+            }
+
+            const set = new Set()
+            for (const player of group.players) {
+                if (set.has(player.name)) {
+                    return [null, new Error('opakující se hráč ve skupině')]
+                }
+                set.add(player.name)
+            }
         }
 
         /** @type {Index} */
