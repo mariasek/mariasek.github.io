@@ -7,7 +7,7 @@ body {
 	margin-right: auto; */
     /* padding: 0px 8px 10px 8px; */
 	font-size: 16pt;
-    margin: 0px;
+    margin: 2px 6px 0px 2px;
 }
 
 #error {
@@ -86,6 +86,8 @@ textarea {
 
 #evaluate-play {
     max-width: 150px;
+    background-color: rgb(45, 47, 49);
+    color: rgb(240, 246, 252);
 }
 
 #new-index-area {

@@ -460,15 +460,16 @@ function setupElements() {
     document.getElementById('clear-evaluate-play').addEventListener('click', clearEvaluatePlay)
     document.getElementById('create-new-index').addEventListener('click', createNewIndex)
     document.getElementById('new-index-area').addEventListener('input', onChangeNewIndex)
+    document.getElementById('download-index').addEventListener('click', downloadIndex)
 }
 
 function downloadIndex() {
-    const data = localStorage.getItem('test-key')
+    const data = document.getElementById('new-index-area').value
     const blob = new Blob([data], { type: 'text/plain' })
     const fileURL = URL.createObjectURL(blob)
     const downloadLink = document.createElement('a')
     downloadLink.href = fileURL
-    downloadLink.download = 'example.txt'
+    downloadLink.download = 'index.txt'
     document.body.appendChild(downloadLink)
     downloadLink.click()
 }
@@ -536,9 +537,10 @@ function onChangeNewIndex() {
 }
 
 function createNewIndex() {
-    //const index = new Index()
-    localStorage.setItem('newIndex', '')
-    reloadNewIndex()
+    if (confirm('Opravdu chcete resetovat index?')) {
+        localStorage.setItem('newIndex', '')
+        reloadNewIndex()
+    }
 }
 
 function reloadNewIndex() {
