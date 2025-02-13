@@ -16,10 +16,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     onChangeEvaluatePlay()
-
-    // TODO:
-    const reader = new TextIndexReader()
-    const index = reader.readIndex(document.getElementById('new-index-area').value)
+    recalculateIndexBalance()
 
 }, false)
 
@@ -457,7 +454,10 @@ export class SimpleEvaluator {
 }
 
 class TextIndexReader {
-    /** @param {string} text */
+    /** 
+     * @param {string} text 
+     * @returns {[Index, Error]} [index, err]
+     * */
     readIndex(text) {
         let place = ''
         /** @type {Date} */
@@ -479,9 +479,17 @@ class TextIndexReader {
                 const match = place.match(/^([^\{]*) {([^\{]*)}$/)
                 if (match !== null) {
                     place = match[1]
-                    indexOpt = this.parseIndexOption(match[2])
+                    /** @type {Error} */
+                    let err
+                    ;[indexOpt, err] = this.parseIndexOption(match[2])
+                    if (err !== null) {
+                        return [null, err]
+                    }
                 }
-                //new Date(date).toISOString().slice(0, 10)
+                
+                if (place.includes('{')) {
+                    return [null, new Error(`místo nesmí obsahovat znak '{'`)]
+                }
                 continue
             }
 
@@ -502,12 +510,12 @@ class TextIndexReader {
         }
 
         /** @type {Index} */
-        return {
+        return [{
             date: date,
             place: place,
             groups: groups,
             opt: indexOpt,
-        }
+        }, null]
     }
 
     /** @param {string} text  */
@@ -524,7 +532,7 @@ class TextIndexReader {
             } else if (c === '}') {
                 inComment = false
             } else if (c === ' ' && !inComment) {
-                result.push(builder.join())
+                result.push(builder.join(''))
                 builder = []
                 continue
             }
@@ -533,15 +541,22 @@ class TextIndexReader {
         }
 
         if (builder.length > 0) {
-            result.push(builder.join())
+            result.push(builder.join(''))
         }
         return result
     }
 
-    /** @param {string} text */
+    /** 
+     * @param {string} text 
+     * @returns {[IndexOption, Error]} [opt, error]
+     * */
     parseIndexOption(text) {
         const indexOpt = new IndexOption()
         for (const token of text.split(' ')) {
+            if (token.length === 0) {
+                continue
+            }
+
             if (token === 'hundred=add' || token === 'sčítané-kilo') {
                 indexOpt.hundredType = Hundred.ADD
             } else if (token === 'hundred=mult' || token === 'násobené-kilo') {
@@ -552,9 +567,119 @@ class TextIndexReader {
                 indexOpt.multiplier = 2
             } else if (token === 'multiplier=10' || token === 'korunový') {
                 indexOpt.multiplier = 10
+            } else {
+                return [null, new Error(`neznámé nastavení indexu '${token}'`)]
             }
         }
-        return indexOpt
+        return [indexOpt, null]
+    }
+}
+
+class BalanceManager {
+    /**
+     * 
+     * @param {Player} playerInPov 
+     * @param {Index} index 
+     * @returns {[number, Error]} [balance, error]
+     */
+    calculateBalanceForIndex(playerInPov, index) {
+        let totalBalance = 0
+
+        for (const group of index.groups) {
+            let [balance, err] = this.calculateBalanceForGroup(playerInPov, group, index.opt)
+            if (err !== null) {
+                return [null, err]
+            }
+
+            totalBalance += balance
+        }
+
+        return [totalBalance, null]
+    }
+
+    /**
+     * 
+     * @param {Player} playerInPov 
+     * @param {Group} group 
+     * @param {IndexOption} indexOpt 
+     * @returns {[number, Error]} [balance, error]
+     */
+    calculateBalanceForGroup(playerInPov, group, indexOpt) {
+        // We have to create new evaluator for each group because each group can have
+        // different number of members
+        const evaluator = new SimpleEvaluator(group.players.length, indexOpt)
+
+        let err = this.checkGroupBalance(evaluator, group)
+        if (err !== null) {
+            return [null, err]
+        }
+
+        if (group.players.find(x => x.name === playerInPov.name) === undefined) {
+            // The input player (in point-of-view) is not part of the group
+            return [0, null]
+        }
+
+        let totalBalance = 0
+
+        for (const member of group.players) {
+            let [balance, err] = this.calculateBalanceForMember(evaluator, playerInPov, member)
+            if (err !== null) {
+                return [null, err]
+            }
+
+            totalBalance += balance
+        }
+
+        return [totalBalance, null]
+    }
+
+    /**
+     * 
+     * @param {SimpleEvaluator} evaluator 
+     * @param {Player} playerInPov 
+     * @param {Player} groupMember 
+     * @returns {[number, Error]} [balance, error]
+     */
+    calculateBalanceForMember(evaluator, playerInPov, groupMember) {
+        let balance = 0
+
+        for (const play of groupMember.plays) {
+            const result = evaluator.evaluate(play)
+            if (!result.accepted) {
+                return [null, new Error(`Hra '${play}': ${result.errorMessage}`)]
+            }
+
+            if (playerInPov.name === groupMember.name) {
+                balance += result.ownValue
+            } else {
+                balance += result.enemyValue
+            }
+        }
+
+        return [balance, null]
+    }
+
+    /**
+     * 
+     * @param {SimpleEvaluator} evaluator 
+     * @param {Group} group 
+     */
+    checkGroupBalance(evaluator, group) {
+        let totalBalance = 0
+        for (const playerInPov of group.players) {
+            for (const member of group.players) {
+                let [balance, err] = this.calculateBalanceForMember(evaluator, playerInPov, member)
+                if (err !== null) {
+                    return err
+                }
+
+                totalBalance += balance
+            }
+        }
+        if (totalBalance !== 0) {
+            return new Error('Suma bilancí všech hráčů ve skupině není rovna 0')
+        }
+        return null
     }
 }
 
@@ -571,18 +696,33 @@ function setupElements() {
 
 function downloadIndex() {
     const data = document.getElementById('new-index-area').value
+    let fileName = 'index.txt'
+
+    const reader = new TextIndexReader()
+    let [index, err] = reader.readIndex(data)
+    if (err === null) {
+        fileName = new Date(index.date).toISOString().slice(0, 10) + '_' + index.place + '.txt'
+    }
+
+    fileName = fileName
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, "")
+        .replaceAll(' ', '_')
+        .replace(/[<>:"/\\|?*]/g, '')
+        .toLowerCase()
+
     const blob = new Blob([data], { type: 'text/plain' })
     const fileURL = URL.createObjectURL(blob)
     const downloadLink = document.createElement('a')
     downloadLink.href = fileURL
-    downloadLink.download = 'index.txt'
+    downloadLink.download = fileName
     document.body.appendChild(downloadLink)
     downloadLink.click()
 }
 
 /** @param {number} */
 function toCurrency(value) {
-    return ((value / 100).toFixed(2)).replaceAll('.', ',') + ' Kč'
+    return (value >= 0 ? '+' : '') + ((value / 100).toFixed(2)).replaceAll('.', ',') + ' Kč'
 }
 
 class EvaluatePlay {
@@ -610,12 +750,12 @@ function onChangeEvaluatePlay() {
     const result = evaluator.evaluate(ep.play)
 
     if (ep.play.length > 0 && !result.accepted) {
-        document.getElementById('error').textContent = 'Chyba: ' + result.errorMessage
+        document.getElementById('evaluate-play-error').textContent = 'Chyba: ' + result.errorMessage
         document.getElementById('ownValue').textContent = ''
         document.getElementById('enemyValue').textContent = ''
         document.getElementById('evaluated-values').hidden = true
     } else {
-        document.getElementById('error').textContent = ''
+        document.getElementById('evaluate-play-error').textContent = ''
         document.getElementById('ownValue').textContent = toCurrency(result.ownValue)
         document.getElementById('enemyValue').textContent = toCurrency(result.enemyValue) + '/os'
         document.getElementById('evaluated-values').hidden = false
@@ -642,6 +782,7 @@ function loadEvaluatePlay() {
 
 function onChangeNewIndex() {
     localStorage.setItem('newIndex', document.getElementById('new-index-area').value)
+    recalculateIndexBalance()
 }
 
 function createNewIndex() {
@@ -653,4 +794,41 @@ function createNewIndex() {
 
 function reloadNewIndex() {
     document.getElementById('new-index-area').value = localStorage.getItem('newIndex')
+}
+
+function recalculateIndexBalance() {
+    document.getElementById('index-error').textContent = ''
+
+    const block = document.getElementById('player-balances')
+    block.innerHTML = ''
+
+    const reader = new TextIndexReader()
+    const [index, err] = reader.readIndex(document.getElementById('new-index-area').value)
+    if (err !== null) {
+        document.getElementById('index-error').textContent = 'Chyba: ' + err.message
+        return
+    }
+
+    const balanceManager = new BalanceManager()
+
+    const uniqueNames = [...new Set(index.groups.flatMap(x => x.players.flatMap(x => x.name)))]
+    uniqueNames.sort()
+
+    for (const name of uniqueNames) {
+        /** @type {Player} */
+        const player = {
+            name: name,
+        }
+        let [balance, err] = balanceManager.calculateBalanceForIndex(player, index)
+        if (err !== null) {
+            document.getElementById('index-error').textContent = 'Chyba: ' + err.message
+            return
+        }
+
+        const div = document.createElement('div')
+        const span = document.createElement('span')
+        block.appendChild(div)
+        div.appendChild(span)
+        span.textContent = name + ': ' + toCurrency(balance)
+    }
 }

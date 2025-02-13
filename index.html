@@ -21,21 +21,12 @@
         <!-- <h1 id="h1">Mariášek</h1> -->
 
         <div>
-            <!-- <h3>Nový index</h3> -->
             <textarea id="new-index-area" wrap="off"></textarea>
-            <!-- <label>Místo:</label>
-            <input id="new-index-place"/>
-            <label>Datum:</label>
-            <input id="new-index-date"/> -->
-            <!-- <select id="new-index-hundred-type">
-                <option value="ADD">Sčítané kilo</option>
-                <option value="MULTI">Násobené kilo</option>
-            </select>
-            <select id="new-index-multiplier">
-                <option value="1">Desetníkový</option>
-                <option value="2">Dvacetníkový</option>
-                <option value="10">Korunový</option>
-            </select> -->
+        </div>
+        <div>
+            <span id="index-error" class="error"></span>
+        </div>
+        <div id="player-balances">
         </div>
 
         <hr/>
@@ -54,7 +45,7 @@
                 </div>
             </div>
             <div>
-                <span id="error"></span>
+                <span id="evaluate-play-error" class="error"></span>
             </div>
             <select id="group-size">
                 <option value="3">3 hráči</option>
