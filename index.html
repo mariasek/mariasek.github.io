@@ -43,15 +43,19 @@
         <div>
             <input id="evaluate-play"/>
             <!-- <label>Vyhodnotit hru</label> -->
-            <div>
-                <span>Já:</span>
-                <span id="ownValue"></span>
+            <div id="evaluated-values">
+                <div>
+                    <span>Já:</span>
+                    <span id="ownValue"></span>
+                </div>
+                <div>
+                    <span>Ostatní:</span>
+                    <span id="enemyValue"></span>
+                </div>
             </div>
             <div>
-                <span>Ostatní:</span>
-                <span id="enemyValue"></span>
+                <span id="error"></span>
             </div>
-            <span id="error"></span>
             <select id="group-size">
                 <option value="3">3 hráči</option>
                 <option value="4">4 hráči</option>

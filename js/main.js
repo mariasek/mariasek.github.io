@@ -613,10 +613,12 @@ function onChangeEvaluatePlay() {
         document.getElementById('error').textContent = 'Chyba: ' + result.errorMessage
         document.getElementById('ownValue').textContent = ''
         document.getElementById('enemyValue').textContent = ''
+        document.getElementById('evaluated-values').hidden = true
     } else {
         document.getElementById('error').textContent = ''
         document.getElementById('ownValue').textContent = toCurrency(result.ownValue)
         document.getElementById('enemyValue').textContent = toCurrency(result.enemyValue) + '/os'
+        document.getElementById('evaluated-values').hidden = false
     }
 
     reloadNewIndex()
