@@ -72,8 +72,12 @@ export class Player {
      * @param {string[]} plays 
      */
     constructor(name, plays) {
-        this.name = name
-        this.plays = plays
+        if (name !== undefined) {
+            this.name = name
+        }
+        if (plays !== undefined) {
+            this.plays = plays
+        }
     }
 }
 
@@ -83,7 +87,9 @@ export class Group {
 
     /** @param {Player[]} players */
     constructor(players) {
-        this.players.push(...players)
+        if (players !== undefined) {
+            this.players.push(...players)
+        }
     }
 }
 

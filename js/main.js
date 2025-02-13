@@ -453,6 +453,220 @@ export class SimpleEvaluator {
     }
 }
 
+class TextIndexReaderV2 {
+    /** 
+     * @param {string} text 
+     * @returns {[Index, Error]} [index, err]
+     * */
+    readIndex(text) {
+        const TOKEN_DATE = 'date'
+        const TOKEN_PLACE = 'place'
+        const TOKEN_OPTION = 'option'
+        const TOKEN_PLAYER = 'player'
+        const TOKEN_NEWLINE = 'newline'
+        const TOKEN_PLAY = 'play'
+        const TOKEN_COMMENT = 'comment'
+        const TOKEN_SEPARATOR = 'separator'
+
+        let isFirstLine = true
+        /** @type {string[]} */
+        let buffer = []
+        let currentToken = TOKEN_DATE
+        /** @type {Date} */
+        let date
+        let place = ''
+        /** @type {string[]} */
+        let opts = []
+        let player = new Player()
+        let group = new Group()
+        /** @type {Group[]} */
+        let groups = []
+
+        for (let i = 0; i < text.length; i++) {
+            const c = text[i]
+
+            if (isFirstLine) {
+                if (currentToken === TOKEN_DATE && c === ' ') {
+                    date = Date.parse(buffer.join(''))
+                    if (date === NaN) {
+                        return [null, new Error('nevalidní datum')]
+                    }
+                    buffer = []
+                    currentToken = TOKEN_PLACE
+                    continue
+                }
+                if (currentToken === TOKEN_PLACE && (c === '{' || c === '\n')) {
+                    place = buffer.join('').trim()
+                    buffer = []
+                    if (c === '{') {
+                        currentToken = TOKEN_OPTION
+                    } else {
+                        currentToken = TOKEN_PLAYER
+                        isFirstLine = false
+                    }
+                    continue
+                }
+                if (currentToken === TOKEN_OPTION && (c === ' ' || c === '}')) {
+                    opts.push(buffer.join(''))
+                    buffer = []
+                    if (c === '}') {
+                        currentToken = TOKEN_NEWLINE
+                    }
+                    continue
+                }
+                if (currentToken === TOKEN_NEWLINE && c === '\n') {
+                    if (buffer.length > 0) {
+                        return [null, new Error(`neočekávané znaky '${buffer.join('')}'`)]
+                    }
+                    currentToken = TOKEN_PLAYER
+                    isFirstLine = false
+                    continue
+                }
+            } else {
+                if (currentToken === TOKEN_PLAYER && c === ' ') {
+                    currentToken = TOKEN_PLAY
+                    player.name = buffer.join('')
+                    buffer = []
+                    continue
+                }
+                if (currentToken === TOKEN_PLAYER && c === '\n') {
+                    if (buffer.length > 0) {
+                        player.name = buffer.join('')
+                        buffer = []
+                        group.players.push(player)
+                        player = new Player()
+                    } else {
+                        groups.push(group)
+                        group = new Group()
+                    }
+                    continue
+                }
+                if (currentToken === TOKEN_PLAY && c === '{') {
+                    currentToken = TOKEN_COMMENT
+                } else if (currentToken === TOKEN_PLAY && (c === ' ' || c === '\n')) {
+                    if (c === ' ') {
+                        player.plays.push(buffer.join(''))
+                        buffer = []
+                    } else {
+                        player.plays.push(buffer.join(''))
+                        buffer = []
+                        group.players.push(player)
+                        player = new Player()
+                        currentToken = TOKEN_PLAYER
+                    }
+                    continue
+                } else if (currentToken === TOKEN_COMMENT && c === '\n') {
+                    return [null, new Error(`neuzavřený komentář '${buffer.join('')}'`)]
+                } else if (currentToken === TOKEN_COMMENT && c === '}') {
+                    buffer.push(c)
+                    player.plays.push(buffer.join(''))
+                    buffer = []
+                    currentToken = TOKEN_SEPARATOR
+                    continue
+                } else if (currentToken === TOKEN_SEPARATOR && (c === ' ' || c === '\n')) {
+                    if (buffer.length > 0) {
+                        player.plays.push(buffer.join(''))
+                        buffer = []
+                    }
+                    if (c === ' ') {
+                        currentToken = TOKEN_PLAY
+                    } else {
+                        group.players.push(player)
+                        player = new Player()
+                        currentToken = TOKEN_PLAYER
+                    }
+                    continue
+                }
+            }
+            buffer.push(c)
+        }
+        
+        if (buffer.length > 0) {
+            player.plays.push(buffer.join(''))
+            buffer = []
+        }
+
+        group.players.push(player)
+        player = new Player()
+        groups.push(group)
+        group = new Group()
+
+        let [indexOpt, err] = this.parseIndexOption(opts)
+        if (err !== null) {
+            return [null, err]
+        }
+
+        const index = new Index()
+        index.groups = groups
+        index.date = date
+        index.place = place
+        index.opt = indexOpt
+
+        err = this.checkIndex(index)
+        if (err !== null) {
+            return [null, err]
+        }
+
+        return [index, null]
+    }
+
+    /** @param {Index} index */
+    checkIndex(index) {
+        if (index.place.length === 0) {
+            return new Error('prázdné místo')
+        }
+
+        for (const group of index.groups) {
+            if (group.players === 0) {
+                return new Error('prázdná skupina')
+            }
+
+            if (group.players.length < 3) {
+                return new Error('nedostatečný počet hráčů ve skupině')
+            }
+
+            const set = new Set()
+            for (const player of group.players) {
+                if (set.has(player.name)) {
+                    return new Error('opakující se hráč ve skupině')
+                }
+                set.add(player.name)
+            }
+        }
+
+        return null
+    }
+    
+    /** 
+     * @param {string[]} tokens
+     * @returns {[IndexOption, Error]} [opt, error]
+     * */
+    parseIndexOption(tokens) {
+        const indexOpt = new IndexOption()
+        for (const token of tokens) {
+            if (token.length === 0) {
+                continue
+            }
+
+            if (token === 'hundred=add' || token === 'sčítané-kilo') {
+                indexOpt.hundredType = Hundred.ADD
+            } else if (token === 'hundred=mult' || token === 'násobené-kilo') {
+                indexOpt.hundredType = Hundred.MULTI
+            } else if (token === 'multiplier=1' || token === 'desetníkový') {
+                indexOpt.multiplier = 1
+            } else if (token === 'multiplier=2' || token === 'dvacetníkový') {
+                indexOpt.multiplier = 2
+            } else if (token === 'multiplier=10' || token === 'korunový') {
+                indexOpt.multiplier = 10
+            } else {
+                return [null, new Error(`neznámé nastavení indexu '${token}'`)]
+            }
+        }
+        return [indexOpt, null]
+    }
+}
+
+// Not used anymore
 class TextIndexReader {
     /** 
      * @param {string} text 
@@ -708,6 +922,7 @@ function setupElements() {
     document.getElementById('clear-evaluate-play').addEventListener('click', clearEvaluatePlay)
     document.getElementById('create-new-index').addEventListener('click', createNewIndex)
     document.getElementById('new-index-area').addEventListener('input', onChangeNewIndex)
+    document.getElementById('new-index-area').addEventListener('selectionchange', onSelectionChangeNewIndex)
     document.getElementById('download-index').addEventListener('click', downloadIndex)
 }
 
@@ -715,7 +930,7 @@ function downloadIndex() {
     const data = document.getElementById('new-index-area').value
     let fileName = 'index.txt'
 
-    const reader = new TextIndexReader()
+    const reader = new TextIndexReaderV2()
     let [index, err] = reader.readIndex(data)
     if (err === null) {
         fileName = new Date(index.date).toISOString().slice(0, 10) + '_' + index.place + '.txt'
@@ -802,6 +1017,17 @@ function onChangeNewIndex() {
     recalculateIndexBalance()
 }
 
+function onSelectionChangeNewIndex() {
+    const reader = new TextIndexReaderV2()
+    const [index, err] = reader.readIndex(document.getElementById('new-index-area').value)
+    if (err !== null) {
+        return
+    }
+
+    document.getElementById('new-index-area').selectionStart
+    // TODO:
+}
+
 function createNewIndex() {
     if (confirm('Opravdu chcete resetovat index?')) {
         localStorage.setItem('newIndex', '')
@@ -819,7 +1045,7 @@ function recalculateIndexBalance() {
     const block = document.getElementById('player-balances')
     block.innerHTML = ''
 
-    const reader = new TextIndexReader()
+    const reader = new TextIndexReaderV2()
     const [index, err] = reader.readIndex(document.getElementById('new-index-area').value)
     if (err !== null) {
         document.getElementById('index-error').textContent = 'Chyba: ' + err.message
