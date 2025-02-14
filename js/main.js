@@ -582,8 +582,12 @@ class TextIndexReaderV2 {
         }
         
         if (buffer.length > 0) {
-            const spec = buffer.join('')
-            player.plays.push(new Play(spec, text.length - spec.length))
+            if (currentToken === TOKEN_PLAY) {
+                const spec = buffer.join('')
+                player.plays.push(new Play(spec, text.length - spec.length))
+            } else if (currentToken === TOKEN_PLAYER) {
+                player.name = buffer.join('')
+            }
             buffer = []
         }
 
@@ -628,6 +632,9 @@ class TextIndexReaderV2 {
 
             const set = new Set()
             for (const player of group.players) {
+                if (player.name.length === 0) {
+                    return new Error('hráč bez jména')
+                }
                 if (set.has(player.name)) {
                     return new Error('opakující se hráč ve skupině')
                 }
