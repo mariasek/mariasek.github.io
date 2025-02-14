@@ -61,22 +61,32 @@ export class IndexOption {
     multiplier = 1
 }
 
+export class Play {
+    spec = ''
+    startPos = -1
+
+    constructor(spec, startPos) {
+        this.spec = spec
+        this.startPos = startPos
+    }
+}
+
 export class Player {
     name = ''
-    /** @type {string[]} */
+    /** @type {Play[]} */
     plays = []
 
     /**
      * 
      * @param {string} name 
-     * @param {string[]} plays 
+     * @param {Play[]} plays 
      */
     constructor(name, plays) {
         if (name !== undefined) {
             this.name = name
         }
         if (plays !== undefined) {
-            this.plays = plays
+            this.plays = [...plays]
         }
     }
 }

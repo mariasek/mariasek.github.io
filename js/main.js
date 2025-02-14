@@ -1,7 +1,7 @@
 "use strict"
 
 import { Tests } from './evaluator-tests.js'
-import { BaseValues, IndexOption, Result, Hundred, ParityPayment, Index, Player, Group } from './types.js'
+import { BaseValues, IndexOption, Result, Hundred, ParityPayment, Index, Player, Group, Play } from './types.js'
 
 document.addEventListener('DOMContentLoaded', function() {
     const tests = new Tests()
@@ -482,8 +482,8 @@ class TextIndexReaderV2 {
         /** @type {Group[]} */
         let groups = []
 
-        for (let i = 0; i < text.length; i++) {
-            const c = text[i]
+        for (let idx = 0; idx < text.length; idx++) {
+            const c = text[idx]
 
             if (isFirstLine) {
                 if (currentToken === TOKEN_DATE && c === ' ') {
@@ -544,12 +544,10 @@ class TextIndexReaderV2 {
                 if (currentToken === TOKEN_PLAY && c === '{') {
                     currentToken = TOKEN_COMMENT
                 } else if (currentToken === TOKEN_PLAY && (c === ' ' || c === '\n')) {
-                    if (c === ' ') {
-                        player.plays.push(buffer.join(''))
-                        buffer = []
-                    } else {
-                        player.plays.push(buffer.join(''))
-                        buffer = []
+                    const spec = buffer.join('')
+                    player.plays.push(new Play(spec, idx - spec.length))
+                    buffer = []
+                    if (c === '\n') {
                         group.players.push(player)
                         player = new Player()
                         currentToken = TOKEN_PLAYER
@@ -559,13 +557,15 @@ class TextIndexReaderV2 {
                     return [null, new Error(`neuzavřený komentář '${buffer.join('')}'`)]
                 } else if (currentToken === TOKEN_COMMENT && c === '}') {
                     buffer.push(c)
-                    player.plays.push(buffer.join(''))
+                    const spec = buffer.join('')
+                    player.plays.push(new Play(spec, idx - spec.length))
                     buffer = []
                     currentToken = TOKEN_SEPARATOR
                     continue
                 } else if (currentToken === TOKEN_SEPARATOR && (c === ' ' || c === '\n')) {
                     if (buffer.length > 0) {
-                        player.plays.push(buffer.join(''))
+                        const spec = buffer.join('')
+                        player.plays.push(new Play(spec, idx - spec.length))
                         buffer = []
                     }
                     if (c === ' ') {
@@ -582,7 +582,8 @@ class TextIndexReaderV2 {
         }
         
         if (buffer.length > 0) {
-            player.plays.push(buffer.join(''))
+            const spec = buffer.join('')
+            player.plays.push(new Play(spec, text.length - spec.length))
             buffer = []
         }
 
@@ -875,9 +876,9 @@ class BalanceManager {
         let balance = 0
 
         for (const play of groupMember.plays) {
-            const result = evaluator.evaluate(play)
+            const result = evaluator.evaluate(play.spec)
             if (!result.accepted) {
-                return [null, new Error(`Hra '${play}': ${result.errorMessage}`)]
+                return [null, new Error(`Hra '${play.spec}' (${play.startPos}. znak): ${result.errorMessage}`)]
             }
 
             if (playerInPov.name === groupMember.name) {
@@ -959,7 +960,7 @@ function toCurrency(value) {
 
 class EvaluatePlay {
     groupSize = 3
-    play = ''
+    play = new Play()
     hundredType = 'ADD'
     multiplier = 1
 }
@@ -968,7 +969,7 @@ function onChangeEvaluatePlay() {
     const ep = new EvaluatePlay()
 
     ep.groupSize = parseInt(document.getElementById('group-size').value)
-    ep.play = document.getElementById('evaluate-play').value
+    ep.play.spec = document.getElementById('evaluate-play').value
     ep.hundredType = document.getElementById('hundred-type').value
     ep.multiplier = parseInt(document.getElementById('multiplier').value)
 
@@ -979,9 +980,9 @@ function onChangeEvaluatePlay() {
     indexOption.multiplier = ep.multiplier
 
     const evaluator = new SimpleEvaluator(ep.groupSize, indexOption)
-    const result = evaluator.evaluate(ep.play)
+    const result = evaluator.evaluate(ep.play.spec)
 
-    if (ep.play.length > 0 && !result.accepted) {
+    if (ep.play.spec.length > 0 && !result.accepted) {
         document.getElementById('evaluate-play-error').textContent = 'Chyba: ' + result.errorMessage
         document.getElementById('ownValue').textContent = ''
         document.getElementById('enemyValue').textContent = ''
@@ -1007,7 +1008,7 @@ function loadEvaluatePlay() {
     const ep = new EvaluatePlay()
     Object.assign(ep, JSON.parse(localStorage.getItem('evaluatePlay')))
     document.getElementById('group-size').value = ep.groupSize
-    document.getElementById('evaluate-play').value = ep.play
+    document.getElementById('evaluate-play').value = ep.play.spec
     document.getElementById('hundred-type').value = ep.hundredType
     document.getElementById('multiplier').value = ep.multiplier
 }
@@ -1024,8 +1025,20 @@ function onSelectionChangeNewIndex() {
         return
     }
 
-    document.getElementById('new-index-area').selectionStart
-    // TODO:
+    const pos = document.getElementById('new-index-area').selectionStart
+
+    for (const group of index.groups) {
+        for (const player of group.players) {
+            for (const play of player.plays) {
+                const endPos = play.startPos + play.spec.length
+                if (play.startPos <= pos && pos <= endPos) {
+                    document.getElementById('evaluate-play').value = play.spec
+                    onChangeEvaluatePlay()
+                }
+            }
+        }
+    }
+    // TODO: set indexOpt and groupSize too
 }
 
 function createNewIndex() {
