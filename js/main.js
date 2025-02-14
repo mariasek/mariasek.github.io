@@ -1019,8 +1019,14 @@ function onChangeNewIndex() {
 }
 
 function onSelectionChangeNewIndex() {
+    if (document.activeElement !== document.getElementById('new-index-area')) {
+        // This can happen for example when the page is loaded
+        return
+    }
+
     const reader = new TextIndexReaderV2()
     const [index, err] = reader.readIndex(document.getElementById('new-index-area').value)
+
     if (err !== null) {
         return
     }
