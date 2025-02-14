@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', function() {
     setupElements()
 
     if (localStorage.getItem('evaluatePlay') === undefined) {
-        clearEvaluatePlay()
+        onClearEvaluatePlay()
     } else {
         loadEvaluatePlay()
     }
@@ -927,7 +927,7 @@ function setupElements() {
     document.getElementById('group-size').addEventListener('change', onChangeEvaluatePlay)
     document.getElementById('hundred-type').addEventListener('change', onChangeEvaluatePlay)
     document.getElementById('multiplier').addEventListener('change', onChangeEvaluatePlay)
-    document.getElementById('clear-evaluate-play').addEventListener('click', clearEvaluatePlay)
+    document.getElementById('clear-evaluate-play').addEventListener('click', onClearEvaluatePlay)
     document.getElementById('create-new-index').addEventListener('click', createNewIndex)
     document.getElementById('new-index-area').addEventListener('input', onChangeNewIndex)
     document.getElementById('new-index-area').addEventListener('selectionchange', onSelectionChangeNewIndex)
@@ -1005,7 +1005,7 @@ function onChangeEvaluatePlay() {
     reloadNewIndex()
 }
 
-function clearEvaluatePlay() {
+function onClearEvaluatePlay() {
     const ep = new EvaluatePlay()
     localStorage.setItem('evaluatePlay', JSON.stringify(ep))
     loadEvaluatePlay()

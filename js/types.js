@@ -66,8 +66,12 @@ export class Play {
     startPos = -1
 
     constructor(spec, startPos) {
-        this.spec = spec
-        this.startPos = startPos
+        if (spec !== undefined) {
+            this.spec = spec
+        }
+        if (startPos !== undefined) {
+            this.startPos = startPos
+        }
     }
 }
 
