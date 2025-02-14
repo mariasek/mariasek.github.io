@@ -924,6 +924,7 @@ function setupElements() {
     document.getElementById('create-new-index').addEventListener('click', createNewIndex)
     document.getElementById('new-index-area').addEventListener('input', onChangeNewIndex)
     document.getElementById('new-index-area').addEventListener('selectionchange', onSelectionChangeNewIndex)
+    document.getElementById('new-index-area').addEventListener('focus', onSelectionChangeNewIndex)
     document.getElementById('download-index').addEventListener('click', downloadIndex)
 }
 
@@ -1033,18 +1034,25 @@ function onSelectionChangeNewIndex() {
 
     const pos = document.getElementById('new-index-area').selectionStart
 
+loop:
     for (const group of index.groups) {
         for (const player of group.players) {
             for (const play of player.plays) {
                 const endPos = play.startPos + play.spec.length
                 if (play.startPos <= pos && pos <= endPos) {
                     document.getElementById('evaluate-play').value = play.spec
+
+                    // Set groupSize and indexOpt too
+                    document.getElementById('group-size').value = group.players.length
+                    document.getElementById('hundred-type').value = index.opt.hundredType
+                    document.getElementById('multiplier').value = index.opt.multiplier
+
                     onChangeEvaluatePlay()
+                    break loop
                 }
             }
         }
     }
-    // TODO: set indexOpt and groupSize too
 }
 
 function createNewIndex() {
