@@ -35,7 +35,7 @@ textarea {
 }
 
 #evaluate-play {
-    max-width: 150px;
+    max-width: 130px;
     background-color: rgb(45, 47, 49);
     color: rgb(240, 246, 252);
 }
@@ -45,4 +45,8 @@ textarea {
     min-height: 310px;
     background-color: rgb(45, 47, 49);
     color: rgb(240, 246, 252);
+}
+
+#evaluated-values {
+    display: inline;
 }
