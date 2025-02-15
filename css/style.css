@@ -3,8 +3,12 @@ body {
     background-color: rgb(13, 17, 23);
     color: rgb(240, 246, 252);
     max-width: 40em;
-	font-size: 16pt;
+	font-size: 15pt;
     margin: 2px 8px 0px 2px;
+}
+
+input, select, button {
+    font-size: 15pt;
 }
 
 .error {
@@ -24,10 +28,6 @@ body {
     body {
         margin: 2px 8px 0px 2px;
     }
-}
-
-input, select, button {
-    font-size: 16pt;
 }
 
 textarea {

@@ -1146,6 +1146,8 @@ function recalculateIndexBalance() {
     const uniqueNames = [...new Set(index.groups.flatMap(x => x.players.flatMap(x => x.name)))]
     uniqueNames.sort()
 
+    block.appendChild(document.createElement('hr'))
+    
     for (const name of uniqueNames) {
         /** @type {Player} */
         const player = {
