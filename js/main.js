@@ -707,15 +707,15 @@ class TextIndexReaderV2 {
                 continue
             }
 
-            if (token === 'hundred=add' || token === 'sčítané-kilo') {
+            if (token === 'hundred=add' || token === 'sčítané-kilo' || token === 'k+') {
                 indexOpt.hundredType = Hundred.ADD
-            } else if (token === 'hundred=mult' || token === 'násobené-kilo') {
+            } else if (token === 'hundred=mult' || token === 'násobené-kilo' || token === 'k*') {
                 indexOpt.hundredType = Hundred.MULTI
-            } else if (token === 'multiplier=1' || token === 'desetníkový') {
+            } else if (token === 'multiplier=1' || token === 'desetníkový' || token === '1x') {
                 indexOpt.multiplier = 1
-            } else if (token === 'multiplier=2' || token === 'dvacetníkový') {
+            } else if (token === 'multiplier=2' || token === 'dvacetníkový' || token === '2x') {
                 indexOpt.multiplier = 2
-            } else if (token === 'multiplier=10' || token === 'korunový') {
+            } else if (token === 'multiplier=10' || token === 'korunový' || token === '10x') {
                 indexOpt.multiplier = 10
             } else {
                 return [null, new Error(`neznámé nastavení indexu '${token}'`)]
