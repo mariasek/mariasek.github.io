@@ -1154,6 +1154,9 @@ function recalculateIndexBalance() {
     uniqueNames.sort()
 
     block.appendChild(document.createElement('hr'))
+    const table = document.createElement('table')
+    table.id = 'balance-table'
+    block.appendChild(table)
 
     for (const name of uniqueNames) {
         /** @type {Player} */
@@ -1166,10 +1169,14 @@ function recalculateIndexBalance() {
             return
         }
 
-        const div = document.createElement('div')
-        const span = document.createElement('span')
-        block.appendChild(div)
-        div.appendChild(span)
-        span.textContent = name + ': ' + toCurrency(balance)
+        const tr = document.createElement('tr')
+        table.appendChild(tr)
+        const nameData = document.createElement('td')
+        tr.appendChild(nameData)
+        nameData.textContent = name
+        const balanceData = document.createElement('td')
+        balanceData.style = 'text-align: right; padding-left: 8px'
+        tr.appendChild(balanceData)
+        balanceData.textContent = toCurrency(balance)
     }
 }
