@@ -583,7 +583,15 @@ class TextIndexReaderV2 {
                 }
                 
                 if (currentToken === TOKEN_COMMENT && c === '\n') {
-                    return [null, new Error(`neuzavřený komentář '${buffer.join('')}'`)]
+                    // Unclosed comment: this will result in an error later
+                    if (buffer.length > 0) {
+                        // Add new play
+                        const spec = buffer.join('')
+                        player.plays.push(new Play(spec, idx - spec.length))
+                        buffer = []
+                    }
+                    currentToken = TOKEN_PLAYER
+                    continue
                 }
                 
                 if (currentToken === TOKEN_COMMENT && c === '}') {
@@ -593,10 +601,16 @@ class TextIndexReaderV2 {
                     player.plays.push(new Play(spec, idx - spec.length))
                     buffer = []
                     if (next === ' ') {
+                        idx++
                         currentToken = TOKEN_PLAY
                     } else if (next === '\n') {
                         // Close the player
+                        idx++
                         currentToken = TOKEN_PLAYER
+                    } else if (next === undefined) {
+                        // End of index
+                    } else {
+                        throw new Error('neočekávaný znak za komentářem: ' + next)
                     }
                     continue
                 }
@@ -620,7 +634,7 @@ class TextIndexReaderV2 {
                 buffer = []
                 group.players.push(player)
             } else {
-                return [null, new Error(`nerozpoznané znaky na konci indexu '${buffer.join('')}' (aktuální token: ${currentToken})`)]
+                return [null, new Error(`nerozpoznané znaky na konci indexu '${buffer.join('')}' (aktuální typ tokenu: ${currentToken})`)]
             }
         }
 
