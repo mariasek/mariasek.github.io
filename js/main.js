@@ -963,7 +963,11 @@ function downloadIndex() {
 
 /** @param {number} */
 function toCurrency(value) {
-    return (value >= 0 ? '+' : '') + ((value / 100).toFixed(2)).replaceAll('.', ',') + ' Kč'
+    let sign = ''
+    if (value > 0) {
+        sign = '+'
+    }
+    return sign + ((value / 100).toFixed(2)).replaceAll('.', ',') + ' Kč'
 }
 
 class EvaluatePlay {
