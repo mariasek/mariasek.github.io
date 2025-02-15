@@ -487,10 +487,8 @@ class TextIndexReaderV2 {
 
             if (isFirstLine) {
                 if (currentToken === TOKEN_DATE && c === ' ') {
+                    // Date will be NaN if parse fails
                     date = Date.parse(buffer.join(''))
-                    if (date === NaN) {
-                        return [null, new Error('nevalidní datum')]
-                    }
                     buffer = []
                     currentToken = TOKEN_PLACE
                     continue
@@ -659,13 +657,17 @@ class TextIndexReaderV2 {
 
     /** @param {Index} index */
     checkIndex(index) {
+        if (isNaN(index.date)) {
+            return new Error('prázdné/nevalidní datum')
+        }
+
         if (index.place.length === 0) {
             return new Error('prázdné místo')
         }
 
         for (const [groupIdx, group] of index.groups.entries()) {
             if (group.players === 0) {
-                return new Error('prázdná skupina')
+                return new Error(`${groupIdx+1}. skupina je prázdná`)
             }
 
             if (group.players.length < 3) {
@@ -675,9 +677,9 @@ class TextIndexReaderV2 {
             const evaluator = new SimpleEvaluator(group.players.length, index.opt)
 
             const set = new Set()
-            for (const player of group.players) {
+            for (const [playerIdx, player] of group.players.entries()) {
                 if (player.name.length === 0) {
-                    return new Error('hráč bez jména')
+                    return new Error(`${playerIdx+1}. hráč v ${groupIdx+1}. skupině má prázdné jméno`)
                 }
                 if (set.has(player.name)) {
                     return new Error(`opakující se hráč '${player.name}' v ${groupIdx+1}. skupině`)
@@ -1147,7 +1149,7 @@ function recalculateIndexBalance() {
     uniqueNames.sort()
 
     block.appendChild(document.createElement('hr'))
-    
+
     for (const name of uniqueNames) {
         /** @type {Player} */
         const player = {
