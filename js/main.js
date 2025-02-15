@@ -293,7 +293,7 @@ export class SimpleEvaluator {
      */
     constructor(groupSize = 3, indexOpt = new IndexOption()) {
         if (groupSize < BaseValues.minGroupSize) {
-            return new Error('velikost skupiny je menší než ' + BaseValues.minGroupSize)
+            throw new Error('velikost skupiny je menší než ' + BaseValues.minGroupSize)
         }
         this.groupSize = groupSize
         this.indexOpt = indexOpt
@@ -466,7 +466,6 @@ class TextIndexReaderV2 {
         const TOKEN_NEWLINE = 'newline'
         const TOKEN_PLAY = 'play'
         const TOKEN_COMMENT = 'comment'
-        const TOKEN_SEPARATOR = 'separator'
 
         let isFirstLine = true
         /** @type {string[]} */
@@ -484,6 +483,7 @@ class TextIndexReaderV2 {
 
         for (let idx = 0; idx < text.length; idx++) {
             const c = text[idx]
+            const next = text[idx+1] // undefined if out of bounds
 
             if (isFirstLine) {
                 if (currentToken === TOKEN_DATE && c === ' ') {
@@ -495,6 +495,7 @@ class TextIndexReaderV2 {
                     currentToken = TOKEN_PLACE
                     continue
                 }
+
                 if (currentToken === TOKEN_PLACE && (c === '{' || c === '\n')) {
                     place = buffer.join('').trim()
                     buffer = []
@@ -506,6 +507,7 @@ class TextIndexReaderV2 {
                     }
                     continue
                 }
+
                 if (currentToken === TOKEN_OPTION && (c === ' ' || c === '}')) {
                     opts.push(buffer.join(''))
                     buffer = []
@@ -514,6 +516,7 @@ class TextIndexReaderV2 {
                     }
                     continue
                 }
+
                 if (currentToken === TOKEN_NEWLINE && c === '\n') {
                     if (buffer.length > 0) {
                         return [null, new Error(`neočekávané znaky '${buffer.join('')}'`)]
@@ -524,55 +527,75 @@ class TextIndexReaderV2 {
                 }
             } else {
                 if (currentToken === TOKEN_PLAYER && c === ' ') {
-                    currentToken = TOKEN_PLAY
+                    // Open new player
+                    if (group.players.length === 0) {
+                        // Open new group
+                        groups.push(group)
+                    }
+                    player = new Player()
+                    group.players.push(player)
                     player.name = buffer.join('')
                     buffer = []
+                    currentToken = TOKEN_PLAY
                     continue
                 }
+
                 if (currentToken === TOKEN_PLAYER && c === '\n') {
                     if (buffer.length > 0) {
+                        // Open new player (with no plays) and close him
+                        if (group.players.length === 0) {
+                            // Open new group
+                            groups.push(group)
+                        }
+                        player = new Player()
+                        group.players.push(player)
                         player.name = buffer.join('')
                         buffer = []
-                        group.players.push(player)
-                        player = new Player()
                     } else {
-                        groups.push(group)
+                        // Close the group
                         group = new Group()
                     }
+                    currentToken = TOKEN_PLAYER
                     continue
                 }
+
                 if (currentToken === TOKEN_PLAY && c === '{') {
-                    currentToken = TOKEN_COMMENT
-                } else if (currentToken === TOKEN_PLAY && (c === ' ' || c === '\n')) {
-                    const spec = buffer.join('')
-                    player.plays.push(new Play(spec, idx - spec.length))
-                    buffer = []
-                    if (c === '\n') {
-                        group.players.push(player)
-                        player = new Player()
-                        currentToken = TOKEN_PLAYER
-                    }
-                    continue
-                } else if (currentToken === TOKEN_COMMENT && c === '\n') {
-                    return [null, new Error(`neuzavřený komentář '${buffer.join('')}'`)]
-                } else if (currentToken === TOKEN_COMMENT && c === '}') {
+                    // Open the comment
                     buffer.push(c)
-                    const spec = buffer.join('')
-                    player.plays.push(new Play(spec, idx - spec.length))
-                    buffer = []
-                    currentToken = TOKEN_SEPARATOR
+                    currentToken = TOKEN_COMMENT
                     continue
-                } else if (currentToken === TOKEN_SEPARATOR && (c === ' ' || c === '\n')) {
+                }
+                
+                if (currentToken === TOKEN_PLAY && (c === ' ' || c === '\n')) {
                     if (buffer.length > 0) {
+                        // Add new play
                         const spec = buffer.join('')
                         player.plays.push(new Play(spec, idx - spec.length))
                         buffer = []
                     }
-                    if (c === ' ') {
-                        currentToken = TOKEN_PLAY
+                    if (c === '\n') {
+                        // Close the player
+                        currentToken = TOKEN_PLAYER
                     } else {
-                        group.players.push(player)
-                        player = new Player()
+                        currentToken = TOKEN_PLAY
+                    }
+                    continue
+                }
+                
+                if (currentToken === TOKEN_COMMENT && c === '\n') {
+                    return [null, new Error(`neuzavřený komentář '${buffer.join('')}'`)]
+                }
+                
+                if (currentToken === TOKEN_COMMENT && c === '}') {
+                    // Close the comment
+                    buffer.push(c)
+                    const spec = buffer.join('')
+                    player.plays.push(new Play(spec, idx - spec.length))
+                    buffer = []
+                    if (next === ' ') {
+                        currentToken = TOKEN_PLAY
+                    } else if (next === '\n') {
+                        // Close the player
                         currentToken = TOKEN_PLAYER
                     }
                     continue
@@ -584,17 +607,22 @@ class TextIndexReaderV2 {
         if (buffer.length > 0) {
             if (currentToken === TOKEN_PLAY) {
                 const spec = buffer.join('')
+                buffer = []
                 player.plays.push(new Play(spec, text.length - spec.length))
             } else if (currentToken === TOKEN_PLAYER) {
+                // Open new player and close him
+                if (group.players.length === 0) {
+                    // Open new group
+                    groups.push(group)
+                }
+                player = new Player()
                 player.name = buffer.join('')
+                buffer = []
+                group.players.push(player)
+            } else {
+                return [null, new Error(`nerozpoznané znaky na konci indexu '${buffer.join('')}' (aktuální token: ${currentToken})`)]
             }
-            buffer = []
         }
-
-        group.players.push(player)
-        player = new Player()
-        groups.push(group)
-        group = new Group()
 
         let [indexOpt, err] = this.parseIndexOption(opts)
         if (err !== null) {
@@ -621,14 +649,16 @@ class TextIndexReaderV2 {
             return new Error('prázdné místo')
         }
 
-        for (const group of index.groups) {
+        for (const [groupIdx, group] of index.groups.entries()) {
             if (group.players === 0) {
                 return new Error('prázdná skupina')
             }
 
             if (group.players.length < 3) {
-                return new Error('nedostatečný počet hráčů ve skupině')
+                return new Error(`nedostatečný počet hráčů (${group.players.length}) v ${groupIdx+1}. skupině`)
             }
+
+            const evaluator = new SimpleEvaluator(group.players.length, index.opt)
 
             const set = new Set()
             for (const player of group.players) {
@@ -636,9 +666,16 @@ class TextIndexReaderV2 {
                     return new Error('hráč bez jména')
                 }
                 if (set.has(player.name)) {
-                    return new Error('opakující se hráč ve skupině')
+                    return new Error(`opakující se hráč '${player.name}' v ${groupIdx+1}. skupině`)
                 }
                 set.add(player.name)
+
+                for (const [playIdx, play] of player.plays.entries()) {
+                    const result = evaluator.evaluate(play.spec)
+                    if (!result.accepted) {
+                        return new Error(`hra '${play.spec}' (${groupIdx+1}. skupina, hráč '${player.name}', ${playIdx+1}. hra): ${result.errorMessage}`)
+                    }
+                }
             }
         }
 
@@ -824,10 +861,10 @@ class BalanceManager {
     calculateBalanceForIndex(playerInPov, index) {
         let totalBalance = 0
 
-        for (const group of index.groups) {
+        for (const [groupIdx, group] of index.groups.entries()) {
             let [balance, err] = this.calculateBalanceForGroup(playerInPov, group, index.opt)
             if (err !== null) {
-                return [null, err]
+                return [null, new Error(`(${groupIdx+1}. skupina): ` + err.message)]
             }
 
             totalBalance += balance
@@ -885,7 +922,7 @@ class BalanceManager {
         for (const play of groupMember.plays) {
             const result = evaluator.evaluate(play.spec)
             if (!result.accepted) {
-                return [null, new Error(`Hra '${play.spec}' (${play.startPos}. znak): ${result.errorMessage}`)]
+                throw new Error(`hra '${play.spec}' (${play.startPos}. znak): ${result.errorMessage}`)
             }
 
             if (playerInPov.name === groupMember.name) {
@@ -916,7 +953,7 @@ class BalanceManager {
             }
         }
         if (totalBalance !== 0) {
-            return new Error('Suma bilancí všech hráčů ve skupině není rovna 0')
+            return new Error('suma bilancí všech hráčů ve skupině není rovna 0')
         }
         return null
     }
