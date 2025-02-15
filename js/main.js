@@ -1047,17 +1047,22 @@ function onChangeEvaluatePlay() {
     const evaluator = new SimpleEvaluator(ep.groupSize, indexOption)
     const result = evaluator.evaluate(ep.play.spec)
 
-    if (ep.play.spec.length > 0 && !result.accepted) {
-        document.getElementById('evaluate-play-error').textContent = 'Chyba: ' + result.errorMessage
-        document.getElementById('ownValue').textContent = ''
-        document.getElementById('enemyValue').textContent = ''
-        document.getElementById('evaluated-values').hidden = true
-    } else {
-        document.getElementById('evaluate-play-error').textContent = ''
-        document.getElementById('ownValue').textContent = toCurrency(result.ownValue)
-        document.getElementById('enemyValue').textContent = toCurrency(result.enemyValue) + '/os'
-        document.getElementById('evaluated-values').hidden = false
+    let errMessage = 'Chyba: ' + result.errorMessage
+    let ownValue = ''
+    let enemyValue = ''
+    let display = 'none'
+
+    if (ep.play.spec.length === 0 || result.accepted) {
+        errMessage = ''
+        ownValue = toCurrency(result.ownValue)
+        enemyValue = toCurrency(result.enemyValue) + '/os'
+        display = 'inline'
     }
+
+    document.getElementById('evaluate-play-error').textContent = errMessage
+    document.getElementById('own-value').textContent = ownValue
+    document.getElementById('enemy-value').textContent = enemyValue
+    document.getElementById('evaluated-values').style = 'display: ' + display
 
     reloadNewIndex()
 }
