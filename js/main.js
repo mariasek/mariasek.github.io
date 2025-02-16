@@ -1064,7 +1064,16 @@ function onChangeEvaluatePlay() {
     document.getElementById('enemy-value').textContent = enemyValue
     document.getElementById('evaluated-values').style = 'display: ' + display
 
+    let width = getTextWidth(document.getElementById('evaluate-play').value)
+    document.getElementById('evaluate-play').style.width = width + 'px'
+
     reloadNewIndex()
+}
+
+function getTextWidth(text) {
+    const div = document.getElementById('invisible-div')
+    div.innerText = text
+    return div.clientWidth
 }
 
 function onClearEvaluatePlay() {
