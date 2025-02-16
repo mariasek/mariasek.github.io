@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="cz" dir="ltr">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.1, maximum-scale=10" />
+        <script type="module" src="js/main.js" id="main-js"></script>
+        <link rel="stylesheet" type="text/css" href="css/style.css" id="style-css">
+        <link rel="icon" href="assets/favicon.ico" type="image/x-icon"/>
+        <title>Nový index - Mariášek</title>
+        <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+        <meta http-equiv="Pragma" content="no-cache">
+        <meta http-equiv="Expires" content="0">
+        <script type="text/javascript">
+            document.getElementById('main-js').src = 'js/main.js' + '?v=' + Date.now()
+            document.getElementById('style-css').src = 'css/style.css' + '?v=' + Date.now()
+        </script>
+    </head>
+
+    <body>
+        <!-- <h1 id="h1">Mariášek</h1> -->
+
+        <div>
+            <textarea id="new-index-area" wrap="off"></textarea>
+        </div>
+        <div>
+            <span id="index-error" class="error"></span>
+        </div>
+
+        <div>
+            <input id="evaluate-play"/>
+            <div id="invisible-div"></div><!-- Needed to get input text length -->
+            <div id="evaluated-values">
+                <span>já:</span>
+                <span id="own-value"></span>
+                <span>oni:</span>
+                <span id="enemy-value"></span>
+            </div>
+            <span id="evaluate-play-error" class="error"></span>
+            <!-- <label>Vyhodnotit hru</label> -->
+            <div>
+            </div>
+        </div>
+
+        <div id="player-balances">
+        </div>
+        
+        <hr/>
+        <select id="group-size">
+            <option value="3">3 hráči</option>
+            <option value="4">4 hráči</option>
+            <option value="5">5 hráčů</option>
+            <option value="6">6 hráčů</option>
+            <option value="7">7 hráčů</option>
+            <option value="8">8 hráčů</option>
+        </select>
+        <select id="hundred-type">
+            <option value="ADD">Sčítané kilo</option>
+            <option value="MULTI">Násobené kilo</option>
+        </select>
+        <select id="multiplier">
+            <option value="1">Desetníkový</option>
+            <option value="2">Dvacetníkový</option>
+            <option value="10">Korunový</option>
+        </select>
+        <button id="clear-evaluate-play">Reset hry</button>
+        <hr/>
+        <button id="download-index">Stáhnout index</button>
+        <button id="create-new-index">Reset indexu</button>
+
+        <hr/>
+
+        <div>
+            <ul>
+                <li><a href="/">Hlavní stránka</a></li>
+                <li><a href="/balance.html">Bilance hráčů</a></li>
+            </ul>
+        </div>
+        
+        <div style="height: 160px"><!-- padding -->
+        </div>
+    </body>
+</html>

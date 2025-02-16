@@ -4,20 +4,21 @@ import { Tests } from './evaluator-tests.js'
 import { BaseValues, IndexOption, Result, Hundred, ParityPayment, Index, Player, Group, Play } from './types.js'
 
 document.addEventListener('DOMContentLoaded', function() {
-    const tests = new Tests()
-    tests.runTests()
+    if (window.location.pathname === '/new-index.html') {
+        const tests = new Tests()
+        tests.runTests()
 
-    setupElements()
+        setupElements()
 
-    if (localStorage.getItem('evaluatePlay') === undefined) {
-        onClearEvaluatePlay()
-    } else {
-        loadEvaluatePlay()
+        if (localStorage.getItem('evaluatePlay') === undefined) {
+            onClearEvaluatePlay()
+        } else {
+            loadEvaluatePlay()
+        }
+
+        onChangeEvaluatePlay()
+        recalculateIndexBalance()
     }
-
-    onChangeEvaluatePlay()
-    recalculateIndexBalance()
-
 }, false)
 
 class SimpleParser {
@@ -657,6 +658,11 @@ class TextIndexReaderV2 {
 
     /** @param {Index} index */
     checkIndex(index) {
+        if (index.date === undefined && index.place.length === 0 && index.groups.length === 0) {
+            // Empty index
+            return null
+        }
+
         if (isNaN(index.date)) {
             return new Error('prázdné/nevalidní datum')
         }

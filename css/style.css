@@ -11,6 +11,10 @@ input, select, button {
     font-size: 15pt;
 }
 
+h1, h2 {
+    margin-left: 8px;
+}
+
 .error {
     color: red;
 }
@@ -59,4 +63,12 @@ textarea {
 
 #balance-table {
     border-spacing: 0px;
+}
+
+a:link, h1 a.title:link {
+	color: rgb(53, 172, 252);
+}
+
+a:visited, h1 a.title:visited {
+	color: rgb(194, 115, 214);
 }
