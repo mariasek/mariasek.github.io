@@ -1,7 +1,24 @@
 "use strict"
 
-import { Hundred, IndexOption } from './types.js'
+import { Hundred, IndexOption, Result } from './types.js'
 import { SimpleEvaluator } from './main.js'
+
+// eslint-disable-next-line no-unused-vars
+class TestRecord {
+    play = ''
+    opt = {
+        groupSize: 3,
+        hundredType: Hundred.MULTI,
+        multiplier: 1,
+    }
+    expected = {
+        accepted: false,
+        comment: '',
+        ownValue: 0,
+        enemyValue: 0,
+    }
+    result = new Result()
+}
 
 export class Tests {
     /**
@@ -306,20 +323,4 @@ export class Tests {
 
         document.getElementById('error').textContent = 'Chyba testu: ' + strError
     }
-}
-
-class TestRecord {
-    play = ''
-    opt = {
-        groupSize: 3,
-        hundredType: Hundred.MULTI,
-        multiplier: 1,
-    }
-    expected = {
-        accepted: false,
-        comment: '',
-        ownValue: 0,
-        enemyValue: 0,
-    }
-    result = new Result()
 }
