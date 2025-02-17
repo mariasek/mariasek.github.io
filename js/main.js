@@ -51,6 +51,7 @@ function onChangeFileChooser() {
                 }
                 document.getElementById('balance-error').textContent = errMessage
                 document.getElementById('index-balance-title').textContent = `Bilance indexů (${files.length}):`
+                document.getElementById('file-chooser').value = '' // we need this to be able to retrigger onChangeFileChooser again
             }
         }
         fileReader.readAsText(file) // UTF-8 encoding is assumed
