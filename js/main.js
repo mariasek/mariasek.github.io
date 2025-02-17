@@ -123,7 +123,7 @@ async function fetchIndexes() {
     return loadIndexList()
         .then(async (names) => {
             return await Promise.all(names.map(async name => {
-                const response = await fetch('index/' + name)
+                const response = await fetch('index/' + name + '?' + Date.now())
                 const text = await response.text()
                 const indexFile = new IndexFile()
                 indexFile.filename = name
@@ -135,7 +135,7 @@ async function fetchIndexes() {
 }
 
 async function loadIndexList() {
-    return fetch('index-list.txt')
+    return fetch('index-list.txt?' + Date.now())
         .then((response) => response.text())
         .then((text) => {
             return text.split('\n')
