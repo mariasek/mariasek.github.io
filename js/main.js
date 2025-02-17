@@ -30,7 +30,9 @@ function onChangeFileChooser() {
     const files = document.getElementById('file-chooser').files
     const indexFiles = []
 
-    document.getElementById('index-balance-title').textContent = `Bilance indexů (${files.length})`
+    document.getElementById('index-balance-title').textContent = `Bilance indexů (${files.length}):`
+    document.getElementById('balance-error').textContent = ''
+    document.getElementById('balance').textContent = ''
 
     for (const file of files) {
         const fileReader = new FileReader()
@@ -42,7 +44,12 @@ function onChangeFileChooser() {
             }
             indexFiles.push(indexFile)
             if (indexFiles.length === files.length) {
-                balance(indexFiles)
+                let errMessage = ''
+                const err = balance(indexFiles)
+                if (err !== null) {
+                    errMessage = err.message
+                }
+                document.getElementById('balance-error').textContent = errMessage
             }
         }
         fileReader.readAsText(file) // UTF-8 encoding is assumed
@@ -50,9 +57,7 @@ function onChangeFileChooser() {
 }
 
 /** @param {IndexFile[]} indexFiles  */
-async function balance(indexFiles) {
-    /** @type {Map<number, Index[]} */
-    const yearMap = new Map()
+function balance(indexFiles) {
     /** @type {Index[]} */
     const indexes = []
     
@@ -84,8 +89,6 @@ async function balance(indexFiles) {
             }
         }
     }
-
-    document.getElementById('balance').textContent = ''
 
     const table = document.createElement('table')
     document.getElementById('balance').appendChild(table)
