@@ -30,7 +30,7 @@ function onChangeFileChooser() {
     const files = document.getElementById('file-chooser').files
     const indexFiles = []
 
-    document.getElementById('index-balance-title').textContent = `Bilance indexů (${files.length}):`
+    document.getElementById('index-balance-title').textContent = ''
     document.getElementById('balance-error').textContent = ''
     document.getElementById('balance').textContent = ''
 
@@ -50,6 +50,7 @@ function onChangeFileChooser() {
                     errMessage = err.message
                 }
                 document.getElementById('balance-error').textContent = errMessage
+                document.getElementById('index-balance-title').textContent = `Bilance indexů (${files.length}):`
             }
         }
         fileReader.readAsText(file) // UTF-8 encoding is assumed
