@@ -979,7 +979,12 @@ function setupElements() {
     document.getElementById('new-index-area').addEventListener('focus', onSelectionChangeNewIndex)
     document.getElementById('download-index').addEventListener('click', downloadIndex)
     document.getElementById('file-chooser').addEventListener('change', onChangeFileChooser)
-    document.getElementById('file-chooser-button').addEventListener('click', () => { document.getElementById('file-chooser').click() })
+    document.getElementById('file-chooser-button').addEventListener('click', () => {
+        document.getElementById('index-balance-title').textContent = ''
+        document.getElementById('balance').textContent = ''
+        document.getElementById('balance-error').textContent = ''
+        document.getElementById('file-chooser').click()
+    })
 }
 
 function downloadIndex() {
