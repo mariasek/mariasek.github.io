@@ -3,7 +3,7 @@
 import { Tests } from './evaluator-tests.js'
 import { BaseValues, IndexOption, Result, Hundred, ParityPayment, Index, Player, Group, Play } from './types.js'
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     if (window.location.pathname === '/new-index.html') {
         const tests = new Tests()
         tests.runTests()
@@ -18,8 +18,131 @@ document.addEventListener('DOMContentLoaded', function() {
 
         onChangeEvaluatePlay()
         recalculateIndexBalance()
+    } else if (window.location.pathname === '/balance.html') {
+        const errElement = document.getElementById('index-error')
+        let err = await balance()
+        if (err !== null) {
+            errElement.textContent = err.message
+        } else {
+            errElement.textContext = ''
+        }
     }
 }, false)
+
+class IndexFile {
+    filename = ''
+    text = ''
+}
+
+async function balance() {
+    /** @type {Error} */
+    let err
+    const indexFiles = await fetchIndexes()
+        .catch((e) => {
+            err = e
+            console.error(e)
+            return
+        })
+
+    if (indexFiles === null) {
+        return err
+    }
+
+    /** @type {Map<number, Index[]} */
+    const yearMap = new Map()
+    
+    for (const indexFile of indexFiles) {
+        const reader = new TextIndexReaderV2()
+        let [index, err] = reader.readIndex(indexFile.text.replaceAll(/\r/g, ''))
+        if (err !== null) {
+            return new Error(`Chyba (${indexFile.filename}): ` + err.message)
+        }
+
+        const year = new Date(index.date).getFullYear()
+        if (yearMap.has(year)) {
+            yearMap.get(year).push(index)
+        } else {
+            yearMap.set(year, [index])
+        }
+    }
+
+    const years = [...yearMap.keys()]
+    years.sort((a, b) => b - a)
+
+    for (const year of years) {
+        const indexes = yearMap.get(year)
+
+        const h3 = document.createElement('h3')
+        h3.textContent = year
+        document.getElementById('balance').appendChild(h3)
+
+        const manager = new BalanceManager()
+        /** @type {Map<string, number[]>} */
+        const playerMap = new Map()
+
+        for (const index of indexes) {
+            for (const group of index.groups) {
+                for (const player of group.players) {
+                    let [balance, err] = manager.calculateBalanceForGroup(player, group, index.opt)
+                    if (err !== null) {
+                        return err
+                    }
+                    if (playerMap.has(player.name)) {
+                        playerMap.get(player.name).push(balance)
+                    } else {
+                        playerMap.set(player.name, [balance])
+                    }
+                }
+            }
+        }
+
+        const table = document.createElement('table')
+        document.getElementById('balance').appendChild(table)
+
+        const names = [...playerMap.keys()]
+        names.sort((a, b) => playerMap.get(b).reduce((x, y) => x + y, 0) - playerMap.get(a).reduce((x, y) => x + y, 0))
+
+        for (const name of names) {
+            const balances = playerMap.get(name)
+            const tr = document.createElement('tr')
+            table.appendChild(tr)
+            const nameData = document.createElement('td')
+            tr.appendChild(nameData)
+            nameData.textContent = name
+
+            const balanceData = document.createElement('td')
+            tr.appendChild(balanceData)
+            balanceData.textContent = toCurrency(balances.reduce((a, b) => a + b, 0))
+            balanceData.style = 'text-align: right; padding-left: 8px'
+        }
+    }
+    return null
+}
+
+async function fetchIndexes() {
+    return loadIndexList()
+        .then(async (names) => {
+            return await Promise.all(names.map(async name => {
+                const response = await fetch('index/' + name)
+                const text = await response.text()
+                const indexFile = new IndexFile()
+                indexFile.filename = name
+                indexFile.text = text
+                return indexFile
+            }))
+        })
+        //.catch((e) => console.error(e))
+}
+
+async function loadIndexList() {
+    return fetch('index-list.txt')
+        .then((response) => response.text())
+        .then((text) => {
+            return text.split('\n')
+                .map(x => x.trim())
+        })
+        //.catch((e) => console.error(e))
+}
 
 class SimpleParser {
     /**
@@ -880,7 +1003,7 @@ function downloadIndex() {
     downloadLink.click()
 }
 
-/** @param {number} */
+/** @param {number} value */
 function toCurrency(value) {
     let sign = ''
     if (value > 0) {

@@ -72,3 +72,7 @@ a:link, h1 a.title:link {
 a:visited, h1 a.title:visited {
 	color: rgb(194, 115, 214);
 }
+
+#balance {
+    margin-left: 8px;
+}
