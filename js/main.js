@@ -4,7 +4,7 @@ import { Tests } from './evaluator-tests.js'
 import { BaseValues, IndexOption, Result, Hundred, ParityPayment, Index, Player, Group, Play } from './types.js'
 
 document.addEventListener('DOMContentLoaded', async function() {
-    if (window.location.pathname === '/new-index.html') {
+        if (window.location.pathname === '/') {
         const tests = new Tests()
         tests.runTests()
 
@@ -18,14 +18,6 @@ document.addEventListener('DOMContentLoaded', async function() {
 
         onChangeEvaluatePlay()
         recalculateIndexBalance()
-    } else if (window.location.pathname === '/balance.html') {
-        const errElement = document.getElementById('index-error')
-        let err = await balance()
-        if (err !== null) {
-            errElement.textContent = err.message
-        } else {
-            errElement.textContext = ''
-        }
     }
 }, false)
 
@@ -34,22 +26,35 @@ class IndexFile {
     text = ''
 }
 
-async function balance() {
-    /** @type {Error} */
-    let err
-    const indexFiles = await fetchIndexes()
-        .catch((e) => {
-            err = e
-            console.error(e)
-            return
-        })
+function onChangeFileChooser() {
+    const files = document.getElementById('file-chooser').files
+    const indexFiles = []
 
-    if (indexFiles === null) {
-        return err
+    document.getElementById('index-balance-title').textContent = `Bilance indexů (${files.length})`
+
+    for (const file of files) {
+        const fileReader = new FileReader()
+        fileReader.onload = (event) => {
+            let indexFile = new IndexFile()
+            indexFile = {
+                filename: file.name,
+                text: event.target.result,
+            }
+            indexFiles.push(indexFile)
+            if (indexFiles.length === files.length) {
+                balance(indexFiles)
+            }
+        }
+        fileReader.readAsText(file) // UTF-8 encoding is assumed
     }
+}
 
+/** @param {IndexFile[]} indexFiles  */
+async function balance(indexFiles) {
     /** @type {Map<number, Index[]} */
     const yearMap = new Map()
+    /** @type {Index[]} */
+    const indexes = []
     
     for (const indexFile of indexFiles) {
         const reader = new TextIndexReaderV2()
@@ -57,66 +62,62 @@ async function balance() {
         if (err !== null) {
             return new Error(`Chyba (${indexFile.filename}): ` + err.message)
         }
-
-        const year = new Date(index.date).getFullYear()
-        if (yearMap.has(year)) {
-            yearMap.get(year).push(index)
-        } else {
-            yearMap.set(year, [index])
-        }
+        indexes.push(index)
     }
 
-    const years = [...yearMap.keys()]
-    years.sort((a, b) => b - a)
+    const manager = new BalanceManager()
+    /** @type {Map<string, number[]>} */
+    const playerMap = new Map()
 
-    for (const year of years) {
-        const indexes = yearMap.get(year)
-
-        const h3 = document.createElement('h3')
-        h3.textContent = year
-        document.getElementById('balance').appendChild(h3)
-
-        const manager = new BalanceManager()
-        /** @type {Map<string, number[]>} */
-        const playerMap = new Map()
-
-        for (const index of indexes) {
-            for (const group of index.groups) {
-                for (const player of group.players) {
-                    let [balance, err] = manager.calculateBalanceForGroup(player, group, index.opt)
-                    if (err !== null) {
-                        return err
-                    }
-                    if (playerMap.has(player.name)) {
-                        playerMap.get(player.name).push(balance)
-                    } else {
-                        playerMap.set(player.name, [balance])
-                    }
+    for (const index of indexes) {
+        for (const group of index.groups) {
+            for (const player of group.players) {
+                let [balance, err] = manager.calculateBalanceForGroup(player, group, index.opt)
+                if (err !== null) {
+                    return err
+                }
+                if (playerMap.has(player.name)) {
+                    playerMap.get(player.name).push(balance)
+                } else {
+                    playerMap.set(player.name, [balance])
                 }
             }
         }
+    }
 
-        const table = document.createElement('table')
-        document.getElementById('balance').appendChild(table)
+    document.getElementById('balance').textContent = ''
 
-        const names = [...playerMap.keys()]
-        names.sort((a, b) => playerMap.get(b).reduce((x, y) => x + y, 0) - playerMap.get(a).reduce((x, y) => x + y, 0))
+    const table = document.createElement('table')
+    document.getElementById('balance').appendChild(table)
 
-        for (const name of names) {
-            const balances = playerMap.get(name)
-            const tr = document.createElement('tr')
-            table.appendChild(tr)
-            const nameData = document.createElement('td')
-            tr.appendChild(nameData)
-            nameData.textContent = name
+    const names = [...playerMap.keys()]
+    const playerBalance = name => playerMap.get(name).reduce((x, y) => x + y, 0)
+    // Sort by player's balance then by player's name
+    names.sort((a, b) => cmp(playerBalance(b), playerBalance(a)) || cmp(a, b))
 
-            const balanceData = document.createElement('td')
-            tr.appendChild(balanceData)
-            balanceData.textContent = toCurrency(balances.reduce((a, b) => a + b, 0))
-            balanceData.style = 'text-align: right; padding-left: 8px'
-        }
+    for (const name of names) {
+        const balances = playerMap.get(name)
+        const tr = document.createElement('tr')
+        table.appendChild(tr)
+        const nameData = document.createElement('td')
+        tr.appendChild(nameData)
+        nameData.textContent = name
+
+        const balanceData = document.createElement('td')
+        tr.appendChild(balanceData)
+        balanceData.textContent = toCurrency(balances.reduce((a, b) => a + b, 0))
+        balanceData.style = 'text-align: right; padding-left: 8px'
     }
     return null
+}
+
+function cmp(a, b) {
+    if (a > b) {
+        return 1
+    } else if (a < b) {
+        return -1
+    }
+    return 0
 }
 
 async function fetchIndexes() {
@@ -131,7 +132,6 @@ async function fetchIndexes() {
                 return indexFile
             }))
         })
-        //.catch((e) => console.error(e))
 }
 
 async function loadIndexList() {
@@ -141,7 +141,6 @@ async function loadIndexList() {
             return text.split('\n')
                 .map(x => x.trim())
         })
-        //.catch((e) => console.error(e))
 }
 
 class SimpleParser {
@@ -975,6 +974,8 @@ function setupElements() {
     document.getElementById('new-index-area').addEventListener('selectionchange', onSelectionChangeNewIndex)
     document.getElementById('new-index-area').addEventListener('focus', onSelectionChangeNewIndex)
     document.getElementById('download-index').addEventListener('click', downloadIndex)
+    document.getElementById('file-chooser').addEventListener('change', onChangeFileChooser)
+    document.getElementById('file-chooser-button').addEventListener('click', () => { document.getElementById('file-chooser').click() })
 }
 
 function downloadIndex() {
@@ -1148,8 +1149,23 @@ function recalculateIndexBalance() {
 
     const balanceManager = new BalanceManager()
 
+    const balanceMap = new Map()
+
+    for (const name of index.groups.flatMap(x => x.players.flatMap(x => x.name))) {
+        /** @type {Player} */
+        const player = {
+            name: name,
+        }
+        let [balance, err] = balanceManager.calculateBalanceForIndex(player, index)
+        if (err !== null) {
+            document.getElementById('index-error').textContent = 'Chyba: ' + err.message
+            return
+        }
+        balanceMap.set(name, balance)
+    }
+
     const uniqueNames = [...new Set(index.groups.flatMap(x => x.players.flatMap(x => x.name)))]
-    uniqueNames.sort()
+    uniqueNames.sort((a, b) => cmp(balanceMap.get(b), balanceMap.get(a)) || cmp(a, b))
 
     block.appendChild(document.createElement('hr'))
     const table = document.createElement('table')
